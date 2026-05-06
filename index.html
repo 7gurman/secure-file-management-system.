@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SecureVault — File Manager</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #0e0e0f;
+    --surface: #161618;
+    --surface2: #1e1e21;
+    --border: #2a2a2e;
+    --accent: #4ade80;
+    --accent-dim: #1a3326;
+    --danger: #f87171;
+    --danger-dim: #2d1515;
+    --warn: #fbbf24;
+    --text: #e8e8ec;
+    --text-dim: #6b6b78;
+    --text-mid: #a0a0ae;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── AUTH SCREEN ── */
+  #auth-screen {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+
+  .auth-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 380px;
+  }
+
+  .auth-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 2rem;
+  }
+
+  .auth-logo svg { color: var(--accent); }
+
+  .auth-logo span {
+    font-family: var(--mono);
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+
+  .auth-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+  }
+
+  .auth-sub {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    margin-bottom: 2rem;
+  }
+
+  .field { margin-bottom: 1.1rem; }
+
+  .field label {
+    display: block;
+    font-size: 0.75rem;
+    font-family: var(--mono);
+    color: var(--text-mid);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .field input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .field input:focus { border-color: var(--accent); }
+
+  .field input::placeholder { color: var(--text-dim); }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 10px 18px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-family: var(--sans);
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.15s;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #0a1a0f;
+    width: 100%;
+    padding: 11px;
+  }
+
+  .btn-primary:hover { background: #6ee7a0; }
+
+  .btn-sm {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-mid);
+    border: 1px solid var(--border);
+  }
+
+  .btn-ghost:hover { border-color: var(--text-mid); color: var(--text); }
+
+  .btn-danger {
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid var(--danger-dim);
+  }
+
+  .btn-danger:hover { background: var(--danger-dim); }
+
+  .error-msg {
+    background: var(--danger-dim);
+    border: 1px solid var(--danger);
+    color: var(--danger);
+    border-radius: 4px;
+    padding: 9px 12px;
+    font-size: 0.8rem;
+    font-family: var(--mono);
+    margin-bottom: 1rem;
+    display: none;
+  }
+
+  .auth-switch {
+    margin-top: 1.2rem;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    text-align: center;
+  }
+
+  .auth-switch a {
+    color: var(--accent);
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .demo-accounts {
+    margin-top: 1.4rem;
+    border-top: 1px solid var(--border);
+    padding-top: 1rem;
+  }
+
+  .demo-label {
+    font-size: 0.68rem;
+    font-family: var(--mono);
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+  }
+
+  .demo-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    margin-bottom: 6px;
+    cursor: pointer;
+    transition: all 0.13s;
+    background: var(--bg);
+  }
+
+  .demo-row:hover { border-color: var(--accent); background: var(--accent-dim); }
+
+  .demo-left { display: flex; align-items: center; gap: 8px; }
+
+  .demo-dot {
+    width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+  }
+  .admin-dot { background: var(--accent); }
+  .viewer-dot { background: #818cf8; }
+
+  .demo-user {
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .demo-pass {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--text-dim);
+  }
+
+  .demo-tag {
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    border-radius: 3px;
+    padding: 2px 7px;
+  }
+  .admin-tag { background: var(--accent-dim); color: var(--accent); }
+  .viewer-tag { background: #1a1a2e; color: #818cf8; }
+
+  /* ── APP LAYOUT ── */
+  #app-screen { display: none; flex: 1; flex-direction: column; }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.5rem;
+    height: 54px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .topbar-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .topbar-user {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .user-badge {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.8rem;
+    color: var(--text-mid);
+    font-family: var(--mono);
+  }
+
+  .role-tag {
+    background: var(--accent-dim);
+    color: var(--accent);
+    border-radius: 3px;
+    padding: 2px 7px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .role-tag.viewer {
+    background: #1a1a2e;
+    color: #818cf8;
+  }
+
+  .app-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 1rem 0;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sidebar-section {
+    padding: 0 0.75rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .sidebar-label {
+    font-size: 0.65rem;
+    font-family: var(--mono);
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    padding: 0 0.5rem;
+    margin-bottom: 4px;
+  }
+
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 7px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: var(--text-mid);
+    transition: all 0.12s;
+    margin-bottom: 1px;
+  }
+
+  .sidebar-item:hover { background: var(--surface2); color: var(--text); }
+  .sidebar-item.active { background: var(--accent-dim); color: var(--accent); }
+
+  .sidebar-item svg { flex-shrink: 0; }
+
+  .sidebar-spacer { flex: 1; }
+
+  .sidebar-footer {
+    padding: 0.75rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    font-family: var(--mono);
+  }
+
+  /* ── MAIN CONTENT ── */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  .main-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.2rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .main-title {
+    font-size: 1rem;
+    font-weight: 600;
+    font-family: var(--mono);
+  }
+
+  .main-actions { display: flex; gap: 8px; }
+
+  .search-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 6px 12px;
+  }
+
+  .search-bar input {
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    width: 180px;
+  }
+
+  .search-bar input::placeholder { color: var(--text-dim); }
+
+  /* ── FILE TABLE ── */
+  .file-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.2rem 1.5rem;
+  }
+
+  /* Upload zone */
+  .upload-zone {
+    border: 1.5px dashed var(--border);
+    border-radius: 6px;
+    padding: 1.5rem;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.82rem;
+    cursor: pointer;
+    margin-bottom: 1.5rem;
+    transition: all 0.15s;
+    font-family: var(--mono);
+  }
+
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim);
+  }
+
+  .file-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .file-table th {
+    text-align: left;
+    font-size: 0.7rem;
+    font-family: var(--mono);
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 0 12px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .file-table td {
+    padding: 11px 12px;
+    font-size: 0.85rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+
+  .file-table tr:hover td { background: var(--surface); }
+
+  .file-row-name {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .file-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .file-icon.doc { background: #1a2540; color: #60a5fa; }
+  .file-icon.img { background: #1f1a2e; color: #c084fc; }
+  .file-icon.zip { background: #2a1a0e; color: #fb923c; }
+  .file-icon.txt { background: #1a261a; color: #4ade80; }
+  .file-icon.unknown { background: var(--surface2); color: var(--text-dim); }
+
+  .file-name-text { font-weight: 500; }
+
+  .enc-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    border-radius: 3px;
+    padding: 1px 6px;
+    font-size: 0.65rem;
+    font-family: var(--mono);
+    font-weight: 600;
+  }
+
+  .perm-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border-radius: 3px;
+    padding: 2px 7px;
+    font-size: 0.7rem;
+    font-family: var(--mono);
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .perm-badge.rw { background: var(--accent-dim); color: var(--accent); }
+  .perm-badge.ro { background: #1a1a2e; color: #818cf8; }
+  .perm-badge.none { background: var(--danger-dim); color: var(--danger); }
+
+  .file-actions { display: flex; gap: 5px; }
+
+  .file-size, .file-date { color: var(--text-mid); font-size: 0.8rem; font-family: var(--mono); }
+
+  /* ── AUDIT LOG ── */
+  .audit-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.2rem 1.5rem;
+    display: none;
+  }
+
+  .audit-entry {
+    display: flex;
+    gap: 12px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.8rem;
+    font-family: var(--mono);
+    align-items: flex-start;
+  }
+
+  .audit-time { color: var(--text-dim); flex-shrink: 0; width: 140px; }
+  .audit-user { color: var(--accent); flex-shrink: 0; width: 90px; }
+  .audit-action { color: var(--text-mid); flex-shrink: 0; width: 80px; }
+  .audit-detail { color: var(--text); }
+
+  .audit-action.upload { color: #60a5fa; }
+  .audit-action.download { color: #4ade80; }
+  .audit-action.delete { color: var(--danger); }
+  .audit-action.login { color: var(--warn); }
+  .audit-action.access-denied { color: var(--danger); }
+
+  /* ── USERS PANEL ── */
+  .users-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.2rem 1.5rem;
+    display: none;
+  }
+
+  .user-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    margin-bottom: 8px;
+    background: var(--surface);
+  }
+
+  .user-info { display: flex; align-items: center; gap: 12px; }
+
+  .user-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--surface2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--accent);
+    border: 1px solid var(--accent-dim);
+  }
+
+  .user-name-col { font-size: 0.9rem; font-weight: 500; }
+  .user-email-col { font-size: 0.75rem; color: var(--text-dim); font-family: var(--mono); }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.8rem;
+    width: 400px;
+    max-width: 95vw;
+  }
+
+  .modal-title {
+    font-size: 1rem;
+    font-weight: 600;
+    font-family: var(--mono);
+    margin-bottom: 1.2rem;
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 1.4rem;
+  }
+
+  /* ── TOAST ── */
+  #toast {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 11px 16px;
+    font-size: 0.82rem;
+    font-family: var(--mono);
+    color: var(--text);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all 0.2s;
+    z-index: 200;
+    max-width: 300px;
+  }
+
+  #toast.show { opacity: 1; transform: translateY(0); }
+  #toast.success { border-color: var(--accent); color: var(--accent); }
+  #toast.error { border-color: var(--danger); color: var(--danger); }
+  #toast.warn { border-color: var(--warn); color: var(--warn); }
+
+  /* ── STATUS BAR ── */
+  .status-bar {
+    border-top: 1px solid var(--border);
+    padding: 5px 1.5rem;
+    font-size: 0.72rem;
+    font-family: var(--mono);
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    background: var(--surface);
+  }
+
+  .status-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent);
+    display: inline-block;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<!-- ══ AUTH SCREEN ══ -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+      <span>SecureVault</span>
+    </div>
+    <div class="auth-title" id="auth-title">Sign In</div>
+    <div class="auth-sub" id="auth-sub">Access your encrypted file vault</div>
+    <div class="error-msg" id="auth-error"></div>
+
+    <div id="register-fields" style="display:none">
+      <div class="field">
+        <label>Full Name</label>
+        <input type="text" id="reg-name" placeholder="Your name">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Username</label>
+      <input type="text" id="auth-username" placeholder="username" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="auth-password" placeholder="••••••••">
+    </div>
+    <div id="register-role-field" style="display:none">
+      <div class="field">
+        <label>Role</label>
+        <select id="reg-role" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:10px 12px;color:var(--text);font-family:var(--mono);font-size:0.9rem;outline:none;">
+          <option value="viewer">Viewer (read-only)</option>
+          <option value="admin">Admin (full access)</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="submitAuth()" id="auth-btn">Sign In</button>
+    <div class="auth-switch" id="auth-switch">
+      No account? <a onclick="toggleMode()">Register here</a>
+    </div>
+
+    <div class="demo-accounts" id="demo-accounts">
+      <div class="demo-label">Demo accounts — click to fill</div>
+      <div class="demo-row" onclick="fillDemo('admin','admin123')">
+        <div class="demo-left">
+          <span class="demo-dot admin-dot"></span>
+          <span class="demo-user">admin</span>
+          <span class="demo-pass">admin123</span>
+        </div>
+        <span class="demo-tag admin-tag">Admin</span>
+      </div>
+      <div class="demo-row" onclick="fillDemo('alice','alice123')">
+        <div class="demo-left">
+          <span class="demo-dot viewer-dot"></span>
+          <span class="demo-user">alice</span>
+          <span class="demo-pass">alice123</span>
+        </div>
+        <span class="demo-tag viewer-tag">Viewer</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ APP SCREEN ══ -->
+<div id="app-screen">
+  <div class="topbar">
+    <div class="topbar-logo">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+      SecureVault
+    </div>
+    <div class="topbar-user">
+      <div class="user-badge">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        <span id="topbar-username">—</span>
+        <span class="role-tag" id="topbar-role">admin</span>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="logout()">Sign out</button>
+    </div>
+  </div>
+
+  <div class="app-body">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Navigation</div>
+        <div class="sidebar-item active" onclick="showView('files', this)" id="nav-files">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+          </svg>
+          My Files
+        </div>
+        <div class="sidebar-item" onclick="showView('audit', this)" id="nav-audit">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+          Audit Log
+        </div>
+        <div class="sidebar-item admin-only" onclick="showView('users', this)" id="nav-users">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          Users
+        </div>
+      </div>
+      <div class="sidebar-spacer"></div>
+      <div class="sidebar-footer">
+        <div>AES-256 encrypted</div>
+        <div style="margin-top:3px">RBAC enforced</div>
+      </div>
+    </div>
+
+    <!-- Main -->
+    <div class="main">
+      <!-- Files Header -->
+      <div class="main-header" id="header-files">
+        <div class="main-title">/ files</div>
+        <div class="main-actions">
+          <div class="search-bar">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-dim)">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" id="search-input" placeholder="search files..." oninput="filterFiles()">
+          </div>
+          <button class="btn btn-ghost btn-sm admin-only" onclick="openUploadModal()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Upload
+          </button>
+        </div>
+      </div>
+
+      <!-- Audit Header -->
+      <div class="main-header" id="header-audit" style="display:none">
+        <div class="main-title">/ audit_log</div>
+        <div style="font-size:0.75rem;color:var(--text-dim);font-family:var(--mono)">All events are immutable</div>
+      </div>
+
+      <!-- Users Header -->
+      <div class="main-header" id="header-users" style="display:none">
+        <div class="main-title">/ users</div>
+        <div style="font-size:0.75rem;color:var(--text-dim);font-family:var(--mono)">Role-Based Access Control</div>
+      </div>
+
+      <!-- Files Area -->
+      <div class="file-area" id="view-files">
+        <div class="upload-zone" id="drop-zone" onclick="openUploadModal()" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="handleDrop(event)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block;vertical-align:middle;margin-right:8px">
+            <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/>
+            <path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>
+          </svg>
+          Drop files here or click to upload
+        </div>
+        <table class="file-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Size</th>
+              <th>Uploaded</th>
+              <th>Encryption</th>
+              <th>Access</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="file-list"></tbody>
+        </table>
+        <div id="empty-state" style="display:none;text-align:center;padding:3rem;color:var(--text-dim);font-size:0.85rem;font-family:var(--mono)">
+          No files found.
+        </div>
+      </div>
+
+      <!-- Audit Area -->
+      <div class="audit-area" id="view-audit"></div>
+
+      <!-- Users Area -->
+      <div class="users-area" id="view-users"></div>
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <span><span class="status-dot"></span> Secure session active</span>
+    <span id="status-files">0 files</span>
+    <span id="status-user-count">0 users</span>
+    <span>Session: <span id="session-id" style="color:var(--text)">—</span></span>
+  </div>
+</div>
+
+<!-- ══ UPLOAD MODAL ══ -->
+<div class="modal-overlay" id="upload-modal">
+  <div class="modal">
+    <div class="modal-title">Upload File</div>
+    <div class="field">
+      <label>File Name</label>
+      <input type="text" id="upload-name" placeholder="document.pdf">
+    </div>
+    <div class="field">
+      <label>File Size (simulated)</label>
+      <input type="text" id="upload-size" placeholder="e.g. 2.4 MB" value="1.2 MB">
+    </div>
+    <div class="field">
+      <label>Access Level</label>
+      <select id="upload-access" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:10px 12px;color:var(--text);font-family:var(--mono);font-size:0.9rem;outline:none;">
+        <option value="rw">Read/Write (Admins)</option>
+        <option value="ro">Read Only (All)</option>
+      </select>
+    </div>
+    <div style="background:var(--accent-dim);border:1px solid var(--border);border-radius:4px;padding:9px 12px;font-size:0.75rem;font-family:var(--mono);color:var(--accent);">
+      🔒 File will be encrypted with AES-256 before storage
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('upload-modal')">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="uploadFile()">Encrypt & Upload</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ VIEW FILE MODAL ══ -->
+<div class="modal-overlay" id="view-modal">
+  <div class="modal">
+    <div class="modal-title" id="view-modal-title">File Preview</div>
+    <div id="view-modal-body" style="font-size:0.82rem;color:var(--text-mid);font-family:var(--mono);line-height:1.7;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('view-modal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DELETE MODAL ══ -->
+<div class="modal-overlay" id="delete-modal">
+  <div class="modal">
+    <div class="modal-title">Confirm Deletion</div>
+    <div style="font-size:0.85rem;color:var(--text-mid);margin-bottom:0.5rem;">
+      Permanently delete <strong id="delete-filename" style="color:var(--text)"></strong>?
+    </div>
+    <div style="font-size:0.78rem;color:var(--danger);font-family:var(--mono);">This action cannot be undone. All encrypted data will be wiped.</div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('delete-modal')">Cancel</button>
+      <button class="btn btn-danger btn-sm" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════
+// STATE
+// ═══════════════════════════════════
+let state = {
+  users: [
+    { id: 1, username: 'admin', password: 'admin123', name: 'System Admin', role: 'admin', email: 'admin@vault.io' },
+    { id: 2, username: 'alice', password: 'alice123', name: 'Alice Chen', role: 'viewer', email: 'alice@vault.io' },
+  ],
+  files: [
+    { id: 1, name: 'financial_report_Q4.pdf', size: '3.2 MB', uploaded: '2026-04-28 09:12', owner: 'admin', encrypted: true, access: 'rw', checksum: 'a3f8...d291' },
+    { id: 2, name: 'architecture_diagram.png', size: '1.8 MB', uploaded: '2026-04-29 14:05', owner: 'admin', encrypted: true, access: 'ro', checksum: 'b7c2...e114' },
+    { id: 3, name: 'employee_data.csv', size: '540 KB', uploaded: '2026-05-01 11:30', owner: 'admin', encrypted: true, access: 'rw', checksum: 'c9a1...f847' },
+    { id: 4, name: 'readme.txt', size: '12 KB', uploaded: '2026-05-03 08:45', owner: 'alice', encrypted: true, access: 'ro', checksum: 'd5e3...a623' },
+  ],
+  auditLog: [
+    { time: '2026-05-05 07:00', user: 'admin', action: 'login', detail: 'Session established' },
+    { time: '2026-05-04 18:31', user: 'alice', action: 'download', detail: 'readme.txt' },
+    { time: '2026-05-04 16:10', user: 'alice', action: 'access-denied', detail: 'employee_data.csv — insufficient permissions' },
+    { time: '2026-05-03 11:30', user: 'admin', action: 'upload', detail: 'employee_data.csv (AES-256)' },
+    { time: '2026-05-03 08:45', user: 'alice', action: 'upload', detail: 'readme.txt (AES-256)' },
+    { time: '2026-05-02 10:00', user: 'admin', action: 'login', detail: 'Session established' },
+  ],
+  currentUser: null,
+  deleteTarget: null,
+  isRegisterMode: false,
+  sessionId: null
+};
+
+// ═══════════════════════════════════
+// AUTH
+// ═══════════════════════════════════
+function fillDemo(username, password) {
+  document.getElementById('auth-username').value = username;
+  document.getElementById('auth-password').value = password;
+  document.getElementById('auth-error').style.display = 'none';
+}
+
+function toggleMode() {
+  state.isRegisterMode = !state.isRegisterMode;
+  const reg = state.isRegisterMode;
+  document.getElementById('auth-title').textContent = reg ? 'Create Account' : 'Sign In';
+  document.getElementById('auth-sub').textContent = reg ? 'Register for vault access' : 'Access your encrypted file vault';
+  document.getElementById('auth-btn').textContent = reg ? 'Register' : 'Sign In';
+  document.getElementById('register-fields').style.display = reg ? 'block' : 'none';
+  document.getElementById('register-role-field').style.display = reg ? 'block' : 'none';
+  document.getElementById('auth-switch').innerHTML = reg
+    ? 'Have an account? <a onclick="toggleMode()">Sign in</a>'
+    : 'No account? <a onclick="toggleMode()">Register here</a>';
+  document.getElementById('demo-accounts').style.display = reg ? 'none' : 'block';
+  document.getElementById('auth-error').style.display = 'none';
+}
+
+function submitAuth() {
+  const username = document.getElementById('auth-username').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const errEl = document.getElementById('auth-error');
+
+  if (!username || !password) { showAuthError('Username and password are required.'); return; }
+
+  if (state.isRegisterMode) {
+    const name = document.getElementById('reg-name').value.trim() || username;
+    const role = document.getElementById('reg-role').value;
+    if (state.users.find(u => u.username === username)) {
+      showAuthError('Username already taken.'); return;
+    }
+    if (password.length < 6) { showAuthError('Password must be at least 6 characters.'); return; }
+    const newUser = { id: Date.now(), username, password, name, role, email: username + '@vault.io' };
+    state.users.push(newUser);
+    addAudit(username, 'login', 'Account created & session established');
+    loginUser(newUser);
+  } else {
+    const user = state.users.find(u => u.username === username && u.password === password);
+    if (!user) { showAuthError('Invalid credentials.'); return; }
+    addAudit(username, 'login', 'Session established');
+    loginUser(user);
+  }
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function loginUser(user) {
+  state.currentUser = user;
+  state.sessionId = Math.random().toString(36).slice(2, 10).toUpperCase();
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'flex';
+  document.getElementById('topbar-username').textContent = user.username;
+  const roleEl = document.getElementById('topbar-role');
+  roleEl.textContent = user.role;
+  roleEl.className = 'role-tag ' + (user.role === 'viewer' ? 'viewer' : '');
+  document.getElementById('session-id').textContent = state.sessionId;
+
+  // Admin-only elements
+  document.querySelectorAll('.admin-only').forEach(el => {
+    el.style.display = user.role === 'admin' ? '' : 'none';
+  });
+  if (user.role !== 'admin') {
+    document.getElementById('drop-zone').style.display = 'none';
+  }
+
+  renderAll();
+  showView('files', document.getElementById('nav-files'));
+  showToast('Welcome, ' + user.username + '!', 'success');
+}
+
+function logout() {
+  addAudit(state.currentUser.username, 'login', 'Session ended');
+  state.currentUser = null;
+  document.getElementById('app-screen').style.display = 'none';
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('auth-username').value = '';
+  document.getElementById('auth-password').value = '';
+  document.getElementById('auth-error').style.display = 'none';
+  if (state.isRegisterMode) toggleMode();
+}
+
+// Allow Enter key
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('auth-screen').style.display !== 'none') submitAuth();
+});
+
+// ═══════════════════════════════════
+// VIEWS
+// ═══════════════════════════════════
+function showView(view, el) {
+  ['files','audit','users'].forEach(v => {
+    document.getElementById('view-' + v).style.display = 'none';
+    document.getElementById('header-' + v).style.display = 'none';
+  });
+  document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+  document.getElementById('view-' + view).style.display = view === 'files' ? 'block' : 'block';
+  document.getElementById('header-' + view).style.display = 'flex';
+  if (view === 'audit') document.getElementById('view-audit').style.display = 'block';
+  if (view === 'users') document.getElementById('view-users').style.display = 'block';
+  el.classList.add('active');
+  renderAll();
+}
+
+// ═══════════════════════════════════
+// FILES
+// ═══════════════════════════════════
+function getFileIcon(name) {
+  const ext = name.split('.').pop().toLowerCase();
+  if (['pdf','doc','docx','txt'].includes(ext)) return 'doc';
+  if (['png','jpg','jpeg','gif','svg','webp'].includes(ext)) return 'img';
+  if (['zip','rar','gz','tar'].includes(ext)) return 'zip';
+  if (ext === 'txt' || ext === 'csv') return 'txt';
+  return 'unknown';
+}
+
+function getFileIconSVG(type) {
+  const icons = {
+    doc: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
+    img: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+    zip: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>',
+    txt: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>',
+    unknown: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>'
+  };
+  return icons[type] || icons.unknown;
+}
+
+function renderFiles(files) {
+  const list = document.getElementById('file-list');
+  const empty = document.getElementById('empty-state');
+  list.innerHTML = '';
+  if (!files || files.length === 0) { empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+
+  const isAdmin = state.currentUser.role === 'admin';
+
+  files.forEach(f => {
+    const iconType = getFileIcon(f.name);
+    const canAccess = isAdmin || f.access === 'ro';
+    const perm = isAdmin ? 'rw' : (canAccess ? 'ro' : 'none');
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>
+        <div class="file-row-name">
+          <div class="file-icon ${iconType}">${getFileIconSVG(iconType)}</div>
+          <div>
+            <div class="file-name-text">${f.name}</div>
+            <div class="enc-badge" style="margin-top:3px">
+              <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              AES-256
+            </div>
+          </div>
+        </div>
+      </td>
+      <td class="file-size">${f.size}</td>
+      <td class="file-date">${f.uploaded}</td>
+      <td><span class="enc-badge">✓ encrypted</span></td>
+      <td><span class="perm-badge ${perm}">${perm === 'rw' ? 'Read/Write' : perm === 'ro' ? 'Read Only' : 'No Access'}</span></td>
+      <td>
+        <div class="file-actions">
+          <button class="btn btn-ghost btn-sm" onclick="viewFile(${f.id})" ${!canAccess ? 'disabled style="opacity:0.3;cursor:not-allowed"' : ''}>View</button>
+          <button class="btn btn-ghost btn-sm" onclick="downloadFile(${f.id})" ${!canAccess ? 'disabled style="opacity:0.3;cursor:not-allowed"' : ''}>↓</button>
+          ${isAdmin ? `<button class="btn btn-danger btn-sm" onclick="deleteFile(${f.id})">✕</button>` : ''}
+        </div>
+      </td>
+    `;
+    list.appendChild(tr);
+  });
+  document.getElementById('status-files').textContent = state.files.length + ' files';
+}
+
+function filterFiles() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const filtered = state.files.filter(f => f.name.toLowerCase().includes(q));
+  renderFiles(filtered);
+}
+
+// ═══════════════════════════════════
+// UPLOAD
+// ═══════════════════════════════════
+function openUploadModal() {
+  if (state.currentUser.role !== 'admin') { showToast('Access denied: insufficient permissions', 'error'); return; }
+  document.getElementById('upload-name').value = '';
+  document.getElementById('upload-size').value = '1.2 MB';
+  document.getElementById('upload-modal').classList.add('open');
+}
+
+function uploadFile() {
+  const name = document.getElementById('upload-name').value.trim();
+  const size = document.getElementById('upload-size').value.trim() || '1.0 MB';
+  const access = document.getElementById('upload-access').value;
+  if (!name) { showToast('File name required', 'error'); return; }
+  const now = new Date();
+  const ts = now.toISOString().slice(0, 16).replace('T', ' ');
+  const newFile = {
+    id: Date.now(),
+    name,
+    size,
+    uploaded: ts,
+    owner: state.currentUser.username,
+    encrypted: true,
+    access,
+    checksum: Math.random().toString(16).slice(2, 6) + '...' + Math.random().toString(16).slice(2, 6)
+  };
+  state.files.unshift(newFile);
+  addAudit(state.currentUser.username, 'upload', name + ' (AES-256)');
+  closeModal('upload-modal');
+  renderAll();
+  showToast('File encrypted & uploaded', 'success');
+}
+
+function dragOver(e) { e.preventDefault(); document.getElementById('drop-zone').classList.add('drag-over'); }
+function dragLeave() { document.getElementById('drop-zone').classList.remove('drag-over'); }
+function handleDrop(e) {
+  e.preventDefault();
+  dragLeave();
+  if (state.currentUser.role !== 'admin') return;
+  const file = e.dataTransfer.files[0];
+  if (!file) return;
+  document.getElementById('upload-name').value = file.name;
+  document.getElementById('upload-size').value = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
+  document.getElementById('upload-modal').classList.add('open');
+}
+
+// ═══════════════════════════════════
+// FILE ACTIONS
+// ═══════════════════════════════════
+function viewFile(id) {
+  const f = state.files.find(x => x.id === id);
+  if (!f) return;
+  const isAdmin = state.currentUser.role === 'admin';
+  if (!isAdmin && f.access !== 'ro') {
+    addAudit(state.currentUser.username, 'access-denied', f.name + ' — insufficient permissions');
+    showToast('Access denied', 'error'); return;
+  }
+  addAudit(state.currentUser.username, 'download', f.name);
+  document.getElementById('view-modal-title').textContent = f.name;
+  document.getElementById('view-modal-body').innerHTML = `
+    <div style="margin-bottom:1rem;padding:10px;background:var(--bg);border-radius:4px;border:1px solid var(--border);">
+      <div style="color:var(--text-dim);margin-bottom:6px;">File Metadata</div>
+      <div>Name: <span style="color:var(--text)">${f.name}</span></div>
+      <div>Size: <span style="color:var(--text)">${f.size}</span></div>
+      <div>Owner: <span style="color:var(--text)">${f.owner}</span></div>
+      <div>Uploaded: <span style="color:var(--text)">${f.uploaded}</span></div>
+      <div>SHA-256: <span style="color:var(--accent)">${f.checksum}</span></div>
+      <div>Algorithm: <span style="color:var(--accent)">AES-256-GCM</span></div>
+    </div>
+    <div style="padding:10px;background:var(--accent-dim);border-radius:4px;border:1px solid var(--border);color:var(--accent);">
+      ✓ File integrity verified. Decryption key derived from session token.
+    </div>
+  `;
+  document.getElementById('view-modal').classList.add('open');
+}
+
+function downloadFile(id) {
+  const f = state.files.find(x => x.id === id);
+  if (!f) return;
+  const isAdmin = state.currentUser.role === 'admin';
+  if (!isAdmin && f.access !== 'ro') {
+    addAudit(state.currentUser.username, 'access-denied', f.name + ' — insufficient permissions');
+    showToast('Access denied: insufficient permissions', 'error'); return;
+  }
+  addAudit(state.currentUser.username, 'download', f.name);
+  showToast('Decrypting & downloading: ' + f.name, 'success');
+}
+
+let deleteTargetId = null;
+function deleteFile(id) {
+  const f = state.files.find(x => x.id === id);
+  if (!f) return;
+  deleteTargetId = id;
+  document.getElementById('delete-filename').textContent = f.name;
+  document.getElementById('delete-modal').classList.add('open');
+}
+
+function confirmDelete() {
+  const f = state.files.find(x => x.id === deleteTargetId);
+  if (f) {
+    addAudit(state.currentUser.username, 'delete', f.name);
+    state.files = state.files.filter(x => x.id !== deleteTargetId);
+  }
+  closeModal('delete-modal');
+  renderAll();
+  showToast('File permanently deleted', 'warn');
+}
+
+// ═══════════════════════════════════
+// AUDIT LOG
+// ═══════════════════════════════════
+function renderAudit() {
+  const el = document.getElementById('view-audit');
+  el.innerHTML = state.auditLog.map(e => `
+    <div class="audit-entry">
+      <span class="audit-time">${e.time}</span>
+      <span class="audit-user">${e.user}</span>
+      <span class="audit-action ${e.action}">${e.action}</span>
+      <span class="audit-detail">${e.detail}</span>
+    </div>
+  `).join('');
+}
+
+function addAudit(user, action, detail) {
+  const now = new Date();
+  const ts = now.toISOString().slice(0, 16).replace('T', ' ');
+  state.auditLog.unshift({ time: ts, user, action, detail });
+}
+
+// ═══════════════════════════════════
+// USERS
+// ═══════════════════════════════════
+function renderUsers() {
+  const el = document.getElementById('view-users');
+  el.innerHTML = state.users.map(u => `
+    <div class="user-row">
+      <div class="user-info">
+        <div class="user-avatar">${u.username.slice(0,2).toUpperCase()}</div>
+        <div>
+          <div class="user-name-col">${u.name}</div>
+          <div class="user-email-col">${u.email}</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="role-tag ${u.role === 'viewer' ? 'viewer' : ''}">${u.role}</span>
+        ${state.currentUser.role === 'admin' && u.id !== state.currentUser.id ? `
+          <button class="btn btn-ghost btn-sm" onclick="toggleRole(${u.id})">
+            ${u.role === 'admin' ? 'Make Viewer' : 'Make Admin'}
+          </button>` : ''}
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('status-user-count').textContent = state.users.length + ' users';
+}
+
+function toggleRole(id) {
+  const u = state.users.find(x => x.id === id);
+  if (!u) return;
+  u.role = u.role === 'admin' ? 'viewer' : 'admin';
+  addAudit(state.currentUser.username, 'login', 'Role changed: ' + u.username + ' → ' + u.role);
+  renderAll();
+  showToast('Role updated for ' + u.username, 'success');
+}
+
+// ═══════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════
+function renderAll() {
+  renderFiles(state.files);
+  renderAudit();
+  renderUsers();
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+let toastTimer;
+function showToast(msg, type = '') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.className = ''; }, 2800);
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+</script>
+</body>
+</html>
